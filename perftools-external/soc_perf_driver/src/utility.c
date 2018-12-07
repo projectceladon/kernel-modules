@@ -85,8 +85,11 @@ SOCPERF_UTILITY_Read_TSC (
     U64* pTsc
 )
 {
-    rdtscll(*(pTsc));
-
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,17,0)
+	*pTsc = rdtsc_ordered();
+#else
+	rdtscll(*(pTsc));
+#endif
     return;
 }
 
