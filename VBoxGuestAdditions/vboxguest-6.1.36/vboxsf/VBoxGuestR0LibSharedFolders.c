@@ -72,13 +72,29 @@ DECLVBGL(void) VbglR0SfTerm(void)
     VbglR0TerminateClient();
 }
 
-DECLVBGL(int) VbglR0SfConnect(PVBGLSFCLIENT pClient)
+DECLVBGL(int) VbglR0SfConnectByName(PVBGLSFCLIENT pClient, char *name)
 {
-    int rc = VbglR0HGCMConnect(&pClient->handle, "ABoxSharedFolders", &pClient->idClient);
+    int rc = VbglR0HGCMConnect(&pClient->handle, name, &pClient->idClient);
     if (RT_SUCCESS(rc))
         LogFunc(("idClient=%d\n", pClient->idClient));
     else
-        LogFunc(("VbglR0HGCMConnect failed -> rc=%Rrc\n", rc));
+        LogFunc(("VbglR0HGCMConnect %s failed -> rc=%Rrc\n", name, rc));
+    return rc;
+}
+
+DECLVBGL(int) VbglR0SfConnect(PVBGLSFCLIENT pClient)
+{
+    int rc = 0;
+
+    rc = VbglR0SfConnectByName(pClient, "VBoxSharedFolders");
+    if (RT_SUCCESS(rc))
+        return rc;
+
+    rc = VbglR0SfConnectByName(pClient, "ABoxSharedFolders");
+    if (RT_SUCCESS(rc))
+        return rc;
+
+    rc = VbglR0SfConnectByName(pClient, "TBoxSharedFolders");
     return rc;
 }
 
