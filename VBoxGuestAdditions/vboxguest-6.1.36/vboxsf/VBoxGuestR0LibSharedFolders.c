@@ -74,7 +74,7 @@ DECLVBGL(void) VbglR0SfTerm(void)
 
 DECLVBGL(int) VbglR0SfConnect(PVBGLSFCLIENT pClient)
 {
-    int rc = VbglR0HGCMConnect(&pClient->handle, "VBoxSharedFolders", &pClient->idClient);
+    int rc = VbglR0HGCMConnect(&pClient->handle, "ABoxSharedFolders", &pClient->idClient);
     if (RT_SUCCESS(rc))
         LogFunc(("idClient=%d\n", pClient->idClient));
     else
