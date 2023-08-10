@@ -19,7 +19,7 @@ ifneq ($(KERNELRELEASE),)
 # Building from kBuild (make -C <kernel_directory> M=`pwd`)
 # or inside a kernel source tree.
 
-obj-m = vboxguest/ vboxsf/ vboxvideo/
+obj-m = vboxguest/ vboxsf/ #vboxvideo/
 
 else # ! KERNELRELEASE
 
