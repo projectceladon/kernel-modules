@@ -2185,7 +2185,12 @@ static int vbsf_iter_lock_pages(struct iov_iter *iter, bool fWrite, struct vbsf_
                 while (!iov_iter_single_seg_count(iter)) /* Old code didn't skip empty segments which caused EFAULTs. */
                     iov_iter_advance(iter, 0);
 # endif
+
+#if RTLNX_VER_MIN(6,0,0)
+                cbSegRet = iov_iter_get_pages2(iter, papPages, iov_iter_count(iter), cMaxPages, &offPage0);
+#else
                 cbSegRet = iov_iter_get_pages(iter, papPages, iov_iter_count(iter), cMaxPages, &offPage0);
+#endif
                 if (cbSegRet > 0) {
                     iov_iter_advance(iter, cbSegRet);
                     cbChunk    = (size_t)cbSegRet;
@@ -2211,7 +2216,11 @@ static int vbsf_iter_lock_pages(struct iov_iter *iter, bool fWrite, struct vbsf_
                     iov_iter_advance(iter, 0);
                     cbSeg = iov_iter_single_seg_count(iter);
                 }
+#if RTLNX_VER_MIN(6,0,0)
+                cbSegRet = iov_iter_get_pages2(iter, &papPages[cPages], iov_iter_count(iter), 1, &offPgProbe);
+#else
                 cbSegRet = iov_iter_get_pages(iter, &papPages[cPages], iov_iter_count(iter), 1, &offPgProbe);
+#endif
                 if (cbSegRet > 0) {
                     iov_iter_advance(iter, cbSegRet); /** @todo maybe not do this if we stash the page? */
                     Assert(offPgProbe + cbSegRet <= PAGE_SIZE);
@@ -2229,7 +2238,11 @@ static int vbsf_iter_lock_pages(struct iov_iter *iter, bool fWrite, struct vbsf_
                          */
                         cbSeg -= cbSegRet;
                         if (cbSeg > 0) {
+#if RTLNX_VER_MIN(6,0,0)
+                            cbSegRet = iov_iter_get_pages2(iter, &papPages[cPages], iov_iter_count(iter), cMaxPages, &offPgProbe);
+#else
                             cbSegRet = iov_iter_get_pages(iter, &papPages[cPages], iov_iter_count(iter), cMaxPages, &offPgProbe);
+#endif
                             if (cbSegRet > 0) {
                                 size_t const cPgRet = RT_ALIGN_Z((size_t)cbSegRet, PAGE_SIZE) >> PAGE_SHIFT;
                                 Assert(offPgProbe == 0);
