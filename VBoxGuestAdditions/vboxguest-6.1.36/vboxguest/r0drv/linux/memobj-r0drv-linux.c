@@ -1301,7 +1301,11 @@ DECLHIDDEN(int) rtR0MemObjNativeLockUser(PPRTR0MEMOBJINTERNAL ppMem, RTR3PTR R3P
             while (rc-- > 0)
             {
                 flush_dcache_page(pMemLnx->apPages[rc]);
+#if RTLNX_VER_MIN(6,1,0)
+                vm_flags_set(papVMAs[rc], VM_DONTCOPY | VM_LOCKED);
+#else
                 papVMAs[rc]->vm_flags |= VM_DONTCOPY | VM_LOCKED;
+#endif
             }
 
             LNX_MM_UP_READ(pTask->mm);
@@ -1771,7 +1775,11 @@ DECLHIDDEN(int) rtR0MemObjNativeMapUser(PPRTR0MEMOBJINTERNAL ppMem, RTR0MEMOBJ p
                     /* Thes flags help making 100% sure some bad stuff wont happen (swap, core, ++).
                      * See remap_pfn_range() in mm/memory.c */
 #if    RTLNX_VER_MIN(3,7,0)
+#if RTLNX_VER_MIN(6,1,0)
+                    vm_flags_set(vma, VM_DONTEXPAND | VM_DONTDUMP);
+#else
                     vma->vm_flags |= VM_DONTEXPAND | VM_DONTDUMP;
+#endif
 #else
                     vma->vm_flags |= VM_RESERVED;
 #endif
