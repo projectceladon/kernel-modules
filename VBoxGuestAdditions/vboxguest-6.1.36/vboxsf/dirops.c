@@ -77,7 +77,12 @@ static int vbsf_dir_open(struct inode *inode, struct file *file)
          */
         pReq = (VBOXSFCREATEREQ *)VbglR0PhysHeapAlloc(RT_UOFFSETOF(VBOXSFCREATEREQ, StrPath.String) + sf_i->path->u16Size);
         if (pReq) {
+#if RTLNX_VER_MIN(5,19,0)
+            unsafe_memcpy(&pReq->StrPath, sf_i->path, SHFLSTRING_HEADER_SIZE + sf_i->path->u16Size,
+                         /* "pReq->StrPath was allocated by VbglR0PhysHeapAlloc()" above*/);
+#else
             memcpy(&pReq->StrPath, sf_i->path, SHFLSTRING_HEADER_SIZE + sf_i->path->u16Size);
+#endif
             RT_ZERO(pReq->CreateParms);
             pReq->CreateParms.Handle      = SHFL_HANDLE_NIL;
             pReq->CreateParms.CreateFlags = SHFL_CF_DIRECTORY
@@ -687,7 +692,12 @@ static struct dentry *vbsf_inode_lookup(struct inode *parent, struct dentry *den
             struct inode *pInode = NULL;
 
             RT_ZERO(*pReq);
+#if RTLNX_VER_MIN(5,19,0)
+            unsafe_memcpy(&pReq->StrPath, path, SHFLSTRING_HEADER_SIZE + path->u16Size,
+			    /* "pReq->StrPath was allocated by VbglR0PhysHeapAlloc() above" */);
+#else
             memcpy(&pReq->StrPath, path, SHFLSTRING_HEADER_SIZE + path->u16Size);
+#endif
             pReq->CreateParms.Handle = SHFL_HANDLE_NIL;
             pReq->CreateParms.CreateFlags = SHFL_CF_LOOKUP | SHFL_CF_ACT_FAIL_IF_NEW;
 
@@ -823,7 +833,12 @@ static int vbsf_create_worker(struct inode *parent, struct dentry *dentry, umode
             VBOXSFCLOSEREQ  Close;
         } *pReq = (union CreateAuxReq *)VbglR0PhysHeapAlloc(RT_UOFFSETOF(VBOXSFCREATEREQ, StrPath.String) + path->u16Size);
         if (pReq) {
+#if RTLNX_VER_MIN(5,19,0)
+            unsafe_memcpy(&pReq->Create.StrPath, path, SHFLSTRING_HEADER_SIZE + path->u16Size,
+                         /* "pReq->Create.StrPath was allocated by VbglR0PhysHeapAlloc() above" */);
+#else
             memcpy(&pReq->Create.StrPath, path, SHFLSTRING_HEADER_SIZE + path->u16Size);
+#endif
             RT_ZERO(pReq->Create.CreateParms);
             pReq->Create.CreateParms.Handle                  = SHFL_HANDLE_NIL;
             pReq->Create.CreateParms.CreateFlags             = fCreateFlags;
@@ -1126,7 +1141,12 @@ static int vbsf_unlink_worker(struct inode *parent, struct dentry *dentry, int f
         VBOXSFREMOVEREQ *pReq = (VBOXSFREMOVEREQ *)VbglR0PhysHeapAlloc(RT_UOFFSETOF(VBOXSFREMOVEREQ, StrPath.String)
                                                                        + path->u16Size);
         if (pReq) {
+#if RTLNX_VER_MIN(5,19,0)
+            unsafe_memcpy(&pReq->StrPath, path, SHFLSTRING_HEADER_SIZE + path->u16Size,
+                         /* "pReq->StrPath was allocated by VbglR0PhysHeapAlloc() above" */);
+#else
             memcpy(&pReq->StrPath, path, SHFLSTRING_HEADER_SIZE + path->u16Size);
+#endif
             uint32_t fFlags = fDirectory ? SHFL_REMOVE_DIR : SHFL_REMOVE_FILE;
             if (dentry->d_inode && ((dentry->d_inode->i_mode & S_IFLNK) == S_IFLNK))
                 fFlags |= SHFL_REMOVE_SYMLINK;

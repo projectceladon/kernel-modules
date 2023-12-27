@@ -3073,7 +3073,12 @@ static int vbsf_reg_open(struct inode *inode, struct file *file)
         LogRelFunc(("Failed to allocate a VBOXSFCREATEREQ buffer!\n"));
         return -ENOMEM;
     }
+#if RTLNX_VER_MIN(5,19,0)
+    unsafe_memcpy(&pReq->StrPath, sf_i->path, SHFLSTRING_HEADER_SIZE + sf_i->path->u16Size,
+                 /* "pReq->StrPath was allocated by VbglR0PhysHeapAlloc() above" */);
+#else
     memcpy(&pReq->StrPath, sf_i->path, SHFLSTRING_HEADER_SIZE + sf_i->path->u16Size);
+#endif
     RT_ZERO(pReq->CreateParms);
     pReq->CreateParms.Handle = SHFL_HANDLE_NIL;
 
