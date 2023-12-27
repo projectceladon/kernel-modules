@@ -590,7 +590,12 @@ int vbsf_inode_revalidate_worker(struct dentry *dentry, bool fForced, bool fInod
                 VBOXSFCREATEREQ *pReq  = (VBOXSFCREATEREQ *)VbglR0PhysHeapAlloc(sizeof(*pReq) + pPath->u16Size);
                 if (pReq) {
                     RT_ZERO(*pReq);
+#if RTLNX_VER_MIN(5,19,0)
+                    unsafe_memcpy(&pReq->StrPath, pPath, SHFLSTRING_HEADER_SIZE + pPath->u16Size,
+                          /* "pReq->StrPath was allocated by VbglR0PhysHeapAlloc()" */);
+#else
                     memcpy(&pReq->StrPath, pPath, SHFLSTRING_HEADER_SIZE + pPath->u16Size);
+#endif
                     pReq->CreateParms.Handle      = SHFL_HANDLE_NIL;
                     pReq->CreateParms.CreateFlags = SHFL_CF_LOOKUP | SHFL_CF_ACT_FAIL_IF_NEW;
 
@@ -883,7 +888,12 @@ int vbsf_inode_setattr(struct dentry *dentry, struct iattr *iattr)
                                                          | SHFL_CF_ACCESS_ATTR_WRITE;
                     if (fAttrs & ATTR_SIZE)
                         pReq->Create.CreateParms.CreateFlags |= SHFL_CF_ACCESS_WRITE;
+#if RTLNX_VER_MIN(5,19,0)
+                    unsafe_memcpy(&pReq->Create.StrPath, sf_i->path, SHFLSTRING_HEADER_SIZE + sf_i->path->u16Size,
+				    /* "pReq->Create.StrPath was allocated by VbglR0PhysHeapAlloc() above" */);
+#else
                     memcpy(&pReq->Create.StrPath, sf_i->path, SHFLSTRING_HEADER_SIZE + sf_i->path->u16Size);
+#endif
                     vrc = VbglR0SfHostReqCreate(pSuperInfo->map.root, &pReq->Create);
                     if (RT_SUCCESS(vrc)) {
                         if (pReq->Create.CreateParms.Result == SHFL_FILE_EXISTS) {
