@@ -1262,7 +1262,12 @@ static int vbsf_inode_rename(struct inode *old_parent, struct dentry *old_dentry
                     struct vbsf_inode_info *sf_file_i = VBSF_GET_INODE_INFO(old_dentry->d_inode);
                     PSHFLSTRING             pOldPath = sf_file_i->path;
 
+#if RTLNX_VER_MIN(5,19,0)
+                    unsafe_memcpy(&pReq->StrDstPath, pNewPath, SHFLSTRING_HEADER_SIZE + pNewPath->u16Size,
+					/* "pReq->StrPath was allocated by VbglR0PhysHeapAlloc() above" */);
+#else
                     memcpy(&pReq->StrDstPath, pNewPath, SHFLSTRING_HEADER_SIZE + pNewPath->u16Size);
+#endif
                     rc = VbglR0SfHostReqRenameWithSrcContig(pSuperInfo->map.root, pReq, pOldPath, virt_to_phys(pOldPath), fRename);
                     VbglR0PhysHeapFree(pReq);
                     if (RT_SUCCESS(rc)) {
@@ -1361,7 +1366,12 @@ static int vbsf_inode_symlink(struct inode *parent, struct dentry *dentry, const
             VBOXSFCREATESYMLINKREQ *pReq  = (VBOXSFCREATESYMLINKREQ *)VbglR0PhysHeapAlloc(cbReq);
             if (pReq) {
                 RT_ZERO(*pReq);
+#if RTLNX_VER_MIN(5,19,0)
+                unsafe_memcpy(&pReq->StrSymlinkPath, pPath, SHFLSTRING_HEADER_SIZE + pPath->u16Size,
+				/* "pReq->StrPath was allocated by VbglR0PhysHeapAlloc() above" */);
+#else
                 memcpy(&pReq->StrSymlinkPath, pPath, SHFLSTRING_HEADER_SIZE + pPath->u16Size);
+#endif
 
                 rc = VbglR0SfHostReqCreateSymlinkContig(pSuperInfo->map.root, pTarget, virt_to_phys(pTarget), pReq);
                 if (RT_SUCCESS(rc)) {
